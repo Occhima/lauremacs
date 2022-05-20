@@ -8,7 +8,7 @@ import sys
 
 FILE = sys.argv[1]
 OLD_STATE = sys.argv[2]
-PARENTS = [p for p in sys.argv[3:]]
+PARENTS = list(sys.argv[3:])
 
 FILE_STATE_CMD = "git status --porcelain --ignored "
 IS_IGNORED_CMD = "git check-ignore "
@@ -65,8 +65,11 @@ def main():
             result_list.append((proc_list[i][0], propagate_state))
             i += 1
 
-    elisp_conses = "".join(['("{}" . "{}")'.format(path, state) for path,state in result_list])
-    elisp_alist = "({})".format(elisp_conses)
+    elisp_conses = "".join(
+        [f'("{path}" . "{state}")' for path, state in result_list]
+    )
+
+    elisp_alist = f"({elisp_conses})"
     print(elisp_alist)
 
 def add_git_processes(status_listings, path):
@@ -78,8 +81,7 @@ def add_git_processes(status_listings, path):
 
 def determine_file_git_state():
     proc  = Popen(FILE_STATE_CMD + FILE, shell=True, stdout=PIPE, stderr=DEVNULL)
-    line  = proc.stdout.readline()
-    if line:
+    if line := proc.stdout.readline():
         state = line.lstrip().split(b" ")[0]
         return state.decode('utf-8').strip()[0]
     else:

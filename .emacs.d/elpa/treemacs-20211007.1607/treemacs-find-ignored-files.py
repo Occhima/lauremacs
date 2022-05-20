@@ -35,7 +35,7 @@ def main():
     procs  = []
 
     for root in roots:
-        if exists(root + "/.git"):
+        if exists(f"{root}/.git"):
             proc = Popen(GIT_CMD, shell=True, stdout=PIPE, bufsize=100, cwd=root)
             procs.append((root, proc))
 

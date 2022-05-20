@@ -20,19 +20,14 @@ if sys.platform == 'win32':
         missing_slash = False
         if not d1.startswith("/"):
             missing_slash = True
-            d1 = "/" + d1
+            d1 = f"/{d1}"
         # full_path is only True when the second argument is
         # another absolute path
         if full_path and not d2.startswith("/"):
             missing_slash = True
-            d2 = "/" + d2
+            d2 = f"/{d2}"
         joined = join(d1, d2)
-        if missing_slash:
-            # still need to return the joined path without the
-            # leading slash, the way it looked originally
-            return joined[1:]
-        else:
-            return joined
+        return joined[1:] if missing_slash else joined
 else:
     def join_dirs(d1, d2, *_):
         return join(d1, d2)
@@ -61,18 +56,15 @@ def main():
         collapsed = current_dir
         steps     = []
         depth     = 0
-        while True:
-            if len(content) == 1 and isdir(content[0]):
-                single_path = content[0]
-                collapsed   = join_dirs(collapsed, single_path, True)
-                content     = dir_content(collapsed)
-                depth      += 1
-                steps.append(single_path)
-                if depth >= LIMIT:
-                    break
-            else:
+        while not (len(content) != 1 or not isdir(content[0])):
+            single_path = content[0]
+            collapsed   = join_dirs(collapsed, single_path, True)
+            content     = dir_content(collapsed)
+            depth      += 1
+            steps.append(single_path)
+            if depth >= LIMIT:
                 break
-        if depth > 0 and not ('"' in collapsed or '\\' in collapsed):
+        if depth > 0 and '"' not in collapsed and '\\' not in collapsed:
             final_dir      = steps[-1]
             display_suffix = final_dir[len(current_dir):]
             out.write("(" + '"' + display_suffix + '" ' + '"' + current_dir + '" ' + '"' + '" "'.join(steps) + '")')

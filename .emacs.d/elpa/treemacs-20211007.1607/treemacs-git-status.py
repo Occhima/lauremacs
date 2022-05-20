@@ -16,9 +16,14 @@ import sys
 
 GIT_ROOT     = str.encode(sys.argv[1])
 LIMIT        = int(sys.argv[2])
-GIT_CMD      = "git status --porcelain --ignored . " + sys.argv[3]
+GIT_CMD = f"git status --porcelain --ignored . {sys.argv[3]}"
 STDOUT       = sys.stdout.buffer
-RECURSE_DIRS = set([str.encode(it[(len(GIT_ROOT)):]) + b"/" for it in sys.argv[4:]]) if len(sys.argv) > 4 else []
+RECURSE_DIRS = (
+    {str.encode(it[(len(GIT_ROOT)) :]) + b"/" for it in sys.argv[4:]}
+    if len(sys.argv) > 4
+    else []
+)
+
 QUOTE        = b'"'
 output       = []
 ht_size      = 0
@@ -51,7 +56,7 @@ def main():
         state, filename = item.split(b' ', 1)
 
         # reduce the state to a single-letter-string
-        state = state[0:1]
+        state = state[:1]
 
         # sometimes git outputs quoted filesnames
         if filename.startswith(b'"'):
@@ -89,9 +94,12 @@ def main():
         # for untracked and ignored directories we need to find an entry for every single file
         # they contain
         # however this applies only for directories that are expanded and whose content is visible
-        if state in [b'?', b'!'] and isdir(abs_path):
-            if filename in RECURSE_DIRS:
-                find_recursive_entries(abs_path, state)
+        if (
+            state in [b'?', b'!']
+            and isdir(abs_path)
+            and filename in RECURSE_DIRS
+        ):
+            find_recursive_entries(abs_path, state)
         if ht_size >= LIMIT:
             break
     STDOUT.write(
